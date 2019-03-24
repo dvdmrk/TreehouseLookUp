@@ -1,0 +1,130 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      #loading-indicator {
+        width: 84px;
+        height: 84px;
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+      }
+      .skill {
+        position: relative;
+        display: inline-block;
+        width: 15%;
+        margin-left: 4%;
+      }
+      .skill-name-container {
+        position: relative;
+        height: 100%;
+        display: inline-block;
+        text-align: center;
+        width: 100%;
+      }
+      .skill-name {
+        position: absolute;
+        bottom: 0;
+        font-weight: bold;
+        width: 100%;
+        font-size: 15px;
+        margin-bottom:10px;
+      }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+          <div class="container">
+            <div class="jumbotron">
+              <h1>Treehouse Student Lookup</h1>
+              <p>What are you're skills and what are your strengths? With this handy dandy Treehouse Student Lookup you'll get a physical representation. Ez-pz!</p>
+            </div>
+          </div>
+        <div class="col-md-6 col-md-offset-3">
+          <input id="student-name" type="text" placeholder="ExampleUsername" title="Type in the Treehouse Username of the student you'd like to look up!" class="form-control"/></br>
+          <button onclick="userSkills();" class="center-block btn btn-primary btn-lg btn-block">Lookup</button>
+        </div>
+      </div><br>
+      <div class="row">
+        <div class="col-md-4" id="values">
+        </div>
+        <div class="col-md-8" id="graph">
+        </div>
+      </div>
+    </div>
+    <img id="loading-indicator" src="http://www.speikboden.it/_medien/bilder/loader2.gif"/>
+  <footer>
+    <script>
+      function userSkills() {
+        var user = $("#student-name").val();
+        if (user == "") {
+          $("#values").html("");
+          $("#graph").html("");
+          alert("Username not supplied.");
+          return;
+        }
+        startLoadingIndicator();
+        $.get("https://teamtreehouse.com/" + user + ".json").done(function(e) {
+          var arr = [];
+          //how to turn a JSON object into a JS Array -- if (e.points.hasOwnProperty(key)) { arr.push({ key: key, value: e.points[key] }); }
+          for(var key in e.points) if (e.points.hasOwnProperty(key)) { arr.push({ key: key, value: e.points[key] }); }
+          //how to sort an array in JS -- arr.sort(function(a,b) { return b.value -a.value; })
+          buildStudentOverview(arr.sort(function(a,b) { return b.value -a.value; }).slice(1));
+          stopLoadingIndicator();
+        }).fail(function() {
+          stopLoadingIndicator();
+          alert("Invalid Username.");
+        });
+      }
+      function startLoadingIndicator() { $("#loading-indicator").show(); }
+      function stopLoadingIndicator() { $("#loading-indicator").hide(); }
+      function buildStudentOverview(skills) {
+        var values = buildValues(skills);
+        showStudentOverview(values, skills);
+      }
+      function showStudentOverview(values, skills) {
+        $("#values").html(values);
+        var graph = showGraph(skills);
+        
+        $("#graph").html(graph);
+      }
+      function buildValues(skills) {
+        var html = "<ul class='list-group'>";
+        
+        for (var i = 0; i < skills.slice(0,10).length; i++)
+          html += "<li class='list-group-item'>" + skills[i].key + " - " + skills[i].value + "</li>";
+        html += "</ul>";
+        return html;
+      }
+      function showGraph(skills) {
+        var height = ($("#values").height() - 20);
+        var leetSkill = skills[0].value;
+        var colors = ['#FF4136', '#FF851B', '#FFDC00', '#2ECC40', '#0099ff'];
+        
+        $("#graph").css({ 'height': height + "px", 'border' : '3px solid #c3c3c3' });
+        return buildGraph(colors, leetSkill, skills);
+      }
+      function buildGraph(colors, leetSkill, skills) {
+        var html = "<div>";
+        //how to trim an Array -- .slice(0,5)
+        for (var i = 0; i < skills.slice(0,5).length; i++) {
+          html += "<div class='skill' style='height:" + (((skills[i].value) / leetSkill) * 100) + "%; background-color: " + colors[i] + ";'>";
+          html += "<div class='skill-name-container'>";
+          html += "<div class='skill-name'>";
+          html += skills[i].key;
+          html += "</div>";
+          html += "</div>";
+          html += "</div>";
+        }
+        html += "</div>";
+        return html;
+      }
+    </script>
+  </footer>
+</html>
